@@ -1,27 +1,16 @@
 package zinlok.server;
 
-import java.net.*;
+import zinlok.server.cliente.*;
 
 public class Server {
 	public static void main (String[] args){
-		int puerto=5000;
 		
-		ServerSocket skServidor;
+		SirveCliente servidor = new SirveCliente();
+		//CompruebaNumClientes comprueba = new CompruebaNumClientes(servidor);
 		
-		Socket skCliente;
+		servidor.start();
+		//comprueba.start();
 		
-		try{
-			skServidor = new ServerSocket(puerto);
-			System.out.println("Escucho el puerto"+puerto);
-			
-			while(true){
-				skCliente=skServidor.accept();
-				System.out.println("Sirvo al cliente: " + skCliente.getInetAddress().toString());
-				skCliente.close();
-			}
-		} catch( Exception e){
-			System.out.println(e.getMessage());
-		}
-	
+		while(true);
 	}
 }
