@@ -30,14 +30,13 @@ public class SirveCliente extends Thread implements SirveClienteInterfaz {
 			while(true){				
 				if (numeroActual < maximo){
 				// Primera parte, cuando encontremos un cliente, lo atendemos
-				this.numeroActual++;
 				this.skCliente=this.skServidor.accept();
+				this.numeroActual++;
 				System.out.println("Sirvo al cliente: " + this.skCliente.getInetAddress().toString());
 				this.cliente=new Cliente(skCliente,this.numeroActual,this.listaClientes);
 				System.out.println("Ejecutando cliente.");
 				this.cliente.start();
 				this.listaClientes.add(this.cliente);
-				this.listaClientes.get(this.listaClientes.size()).start();
 				}
 			}
 		} catch( Exception e){

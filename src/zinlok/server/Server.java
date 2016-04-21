@@ -6,10 +6,10 @@ public class Server {
 	public static void main (String[] args){
 		
 		SirveCliente servidor = new SirveCliente();
-		//CompruebaNumClientes comprueba = new CompruebaNumClientes(servidor);
+		CompruebaNumClientes comprueba = new CompruebaNumClientes(servidor);
 		
 		servidor.start();
-		//comprueba.start();
+		comprueba.start();
 		
 		while(true);
 	}
