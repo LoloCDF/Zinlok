@@ -1,9 +1,9 @@
 package zinlok.server.cliente;
 
+import java.util.ArrayList;
+
 public class CompruebaNumClientes extends Thread implements CompruebaNumClientesInterfaz{
 	// Parámetros para comprobar
-	private int numClientesSer = 0;
-	private int numClientes = 0;
 	SirveCliente servidor = null;
 	
 	public CompruebaNumClientes (SirveCliente servidor){
@@ -11,12 +11,18 @@ public class CompruebaNumClientes extends Thread implements CompruebaNumClientes
 	}
 	
 	public void run (){
+		// Parámetros para comprobar el número de conexiones existentes
+		ArrayList<Cliente> listaClientes = null;
+		int i = 0;
+		
+		listaClientes=this.servidor.obtenerLista();
+
 		while(true){	
-			this.numClientesSer = this.servidor.obtieneNumClientes();
-			this.numClientes = this.servidor.obtenerLista().size();
-			
-			if (this.numClientesSer != this.numClientes){
-				servidor.decrementaLista();
+			for(i=0; i<listaClientes.size();i++){
+				if (listaClientes.get(i).isAlive()==false){
+					this.servidor.decrementaLista();
+					listaClientes.remove(i);
+				}
 			}
 		}			
 	}

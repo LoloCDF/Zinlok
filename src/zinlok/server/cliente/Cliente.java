@@ -1,41 +1,56 @@
 package zinlok.server.cliente;
 
 import java.net.*;
-import java.util.ArrayList;
-import java.io.IOException;
 
-public class Cliente extends Thread implements ClienteInterfaz{
+import zinlok.server.protocolo.*;
+
+import java.io.*;
+
+public class Cliente extends Thread implements ClienteInterfaz {
 	// Variable que guarda el socket del cliente
-	Socket miSocket;
+	private Socket miSocket;
 	
-	// Puntero a la lista de clientes
-	ArrayList<Cliente> listaClientes = null;
-	
-	// Índice de donde estoy en la tabla
-	int indice = 0;
-	
-	public Cliente(Socket skCliente, int indice, ArrayList<Cliente> listaClientes){
+	public Cliente(Socket skCliente){
 		this.miSocket = skCliente;
-		this.indice = indice-1;
-		this.listaClientes = listaClientes;
 	}
 	
 	public void run(){
-		System.out.println("Se ha encendido la bombilla.");
+		
+		// Clase de comunicaciones
+		Comunicacion comunicaciones = null;
+		
+		// Mensaje
+		Mensaje mensaje = null;
+		
+		// Leemos del stream para ver que nos pide el cliente		
 		try {
-			Thread.sleep(1000000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		System.out.println("Se ha cerrado la conexión con el cliente: "+miSocket.getInetAddress().getHostAddress());
-		try {
+			comunicaciones = new Comunicacion(this.miSocket);
+			mensaje=comunicaciones.leeMensaje();
+			
+			// Comprobamos que se ha mandado algo correcto
+			if (mensaje!=null){
+				/*
+				 *	A PARTIR DE AQUÍ EL CÓDIGO ES PARA HACER PRUEBAS.
+				 * 	REALMENTE SE DEBERÍA IMPLEMENTAR LA CLASE "ACCIONES" QUE
+				 * 	TUVIESE UN MÉTODO POR CADA ACCIÓN QUE SE QUIERA REALIZAR
+				 * 	EJ: ABRIR PUERTA, CONSULTA EN BASE DE DATOS, APAGAR BOMBILLA...
+				 * 	ESTA CLASE EJECUTARIA LOS DISTINTOS MÉTODOS DESDE SU CONSTRUCTOR
+				 * 	PARA ELLO NECESITA EL MENSAJE DESPEDAZADO, Y ELLA YA EJECUTARÁ EL 
+				 * 	MÉTODO CON THIS.MÉTODO() QUIZÁS SEA MEJOR DIVIDIR EN VEZ DE
+				 * 	EN MÉTODOS EN CLASES. HAY QUE DISCUTIRLO.
+				 */
+			}
+			
+			else
+				System.out.println("El mensaje no cumplía el formato.");
+			
+			System.out.println("Se ha cerrado la conexión con el cliente: "+miSocket.getInetAddress().getHostAddress());
 			this.miSocket.close();
 		}
 		catch (IOException ex){
 			System.out.println("Problema al cerrar el socket.");
 		}
 				
-		Thread.currentThread().interrupt();
-		
+		Thread.currentThread().interrupt();		
 	}
 }
