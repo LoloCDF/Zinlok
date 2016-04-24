@@ -44,19 +44,16 @@ public class Mensaje implements MensajeInterfaz {
 	}
 	
 	public Boolean compruebaMensaje(){
-		Boolean correcto = true;
+		Boolean correcto = false;
 		ListaMensajes lista = new ListaMensajes();
 		int i = 0;
 		
 		// Comprobamos el campo comando es valido
 		for (i=0; i<lista.comandosValidos().length; i++){
-			if (this.comando!=lista.comandosValidos()[i])
-				if (i==lista.comandosValidos().length-1)
-					correcto=false;
-			
-			else {
+			if (this.comando.compareTo(lista.comandosValidos()[i])==0){
 				correcto=true;
-			}
+				i=lista.comandosValidos().length;
+			}				
 		}
 		
 		return correcto;		

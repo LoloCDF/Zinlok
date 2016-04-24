@@ -47,5 +47,6 @@ public class Comunicacion {
 	
 	public Boolean mandaMensaje(){
 		// POR IMPLEMENTAR
+		return true;
 	}
 }
