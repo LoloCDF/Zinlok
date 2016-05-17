@@ -1,0 +1,96 @@
+GEOGESTOR-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+				 OBJECT-TYPE  FROM RFC1212
+				 DisplayString FROM RFC1213;
+				 
+geogestor-mib OBJECT IDENTIFIER ::= {experimental 1}
+				 
+tabla      OBJECT-TYPE 
+           SYNTAX SEQUENCE OF TablaEntry 
+           ACCESS not-accessible 
+           STATUS mandatory 
+           DESCRIPTION 
+				"Tabla donde se guardaron los datos pertinentes."
+           ::= { geogestor-mib 1 } 
+           
+TablaEntry ::= 
+           SEQUENCE { 
+           				ipIndex INTEGER,
+						      ipAddr	IpAddress,
+						      nconexiones INTEGER,
+						      url DisplayString,
+						      localizacion DisplayString,
+						      ciudad DisplayString
+					} 
+					
+tablaEntry    OBJECT-TYPE 
+           SYNTAX TablaEntry 
+           ACCESS not-accessible 
+           STATUS mandatory 
+           DESCRIPTION 
+				"Información referente a cada monitor."
+           INDEX { ipIndex } 
+           ::= { tabla 1 } 
+		   
+		   
+ipIndex    OBJECT-TYPE 
+           SYNTAX INTEGER 
+           ACCESS read-only 
+           STATUS mandatory 
+           DESCRIPTION 
+			"Identificador de cada cliente."
+           ::= { tablaEntry 1 } 
+           
+		   
+ipAddr     OBJECT-TYPE 
+           SYNTAX IpAddress 
+           ACCESS read-only 
+           STATUS mandatory 
+           DESCRIPTION 
+			"Direccion IP de cada cliente."
+           ::= { tablaEntry 2 } 
+		   
+nconexiones	OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+			"Numero de conexiones por cliente."
+			::= { tablaEntry 3}
+			
+url			OBJECT-TYPE
+			SYNTAX DisplayString
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+			"URL de cada cliente."
+			::= {tablaEntry 4}
+			
+localizacion  OBJECT-TYPE
+      SYNTAX DisplayString
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+        "Localizacion del cliente."
+      ::= { tablaEntry 5}
+      
+ciudad  OBJECT-TYPE
+      SYNTAX DisplayString
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+      "Ciudad desde la que se conecta el cliente."
+      ::= {tablaEntry 6}
+
+
+numClientes   OBJECT-TYPE 
+           SYNTAX  INTEGER
+           ACCESS read-write 
+           STATUS mandatory 
+           DESCRIPTION 
+				"Es el nombre de la persona de contacto."
+           ::= { geogestor-mib 2 } 
+		   
+		   
+END
