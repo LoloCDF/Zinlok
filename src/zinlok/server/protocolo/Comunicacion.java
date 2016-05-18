@@ -1,9 +1,10 @@
 package zinlok.server.protocolo;
 
 import java.net.Socket;
+import java.nio.charset.Charset;
 import java.io.*;
 
-public class Comunicacion {
+public class Comunicacion implements ComunicacionInterfaz{
 	// Socket
 	private Socket skCliente;
 	
@@ -45,8 +46,13 @@ public class Comunicacion {
 		return mensaje;
 	}
 	
-	public Boolean mandaMensaje(){
-		// POR IMPLEMENTAR
-		return true;
+	public Boolean mandaMensaje(String mensaje) throws IOException{
+		Boolean resultado = true;
+		OutputStream salida;
+		
+		salida=this.skCliente.getOutputStream();
+		salida.write(mensaje.getBytes(Charset.forName("UTF-8")));
+		
+		return resultado;
 	}
 }

@@ -12,7 +12,7 @@ import zinlok.server.snmp.Snmp;
 
 public class SirveCliente extends Thread implements SirveClienteInterfaz {
 	// Variables para el manejo de la tabla de clientes conectados
-	private int maximo = 10;
+	private int maximo = 3;
 	private ArrayList<Cliente> listaClientes = new ArrayList<Cliente>();
 	private Cliente cliente = null;
 	private ServerSocket skServidor;
@@ -33,40 +33,57 @@ public class SirveCliente extends Thread implements SirveClienteInterfaz {
 		int i = 0;
 		int posicion = -1;
 		
-		try{
-			this.localizador=new Localiza();
-			this.skServidor = new ServerSocket(this.puerto);
+			try {
+				this.localizador=new Localiza();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			try {
+				this.skServidor = new ServerSocket(this.puerto);
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
 			System.out.println("Escucho el puerto "+this.puerto);
 			
-			while(true){				
+			while(true){	
 				if (this.servidorSnmp.getNumClientes() < maximo){
-					// Primera parte, cuando encontremos un cliente, lo atendemos
-					this.skCliente=this.skServidor.accept();
-					this.servidorSnmp.aumentaClientes();
-					
-					// ¿Ha vuelto a conectarse la IP?
-					for (i=0;i<this.servidorSnmp.getTabla().length; i++){
-						if(skCliente.getInetAddress().getHostAddress().equals(this.servidorSnmp.getTabla()[i].getIpAddr())){
-							posicion=i;
-							this.servidorSnmp.getTabla()[posicion].setNconexiones(this.servidorSnmp.getTabla()[posicion].getNconexiones()+1);
-							i=this.servidorSnmp.getTabla().length;
+					try {
+						// Primera parte, cuando encontremos un cliente, lo atendemos
+						this.skCliente=this.skServidor.accept();
+						this.servidorSnmp.aumentaClientes();
+						
+						// ¿Ha vuelto a conectarse la IP?
+						for (i=0;i<this.servidorSnmp.getTabla().length; i++){
+							if(skCliente.getInetAddress().getHostAddress().equals(this.servidorSnmp.getTabla()[i].getIpAddr())){
+								posicion=i;
+								this.servidorSnmp.getTabla()[posicion].setNconexiones(this.servidorSnmp.getTabla()[posicion].getNconexiones()+1);
+								i=this.servidorSnmp.getTabla().length;
+							}
 						}
-					}
-					
-					if (posicion==-1){
-					// Buscamos si hay hueco libre
-					for (i=0; i<this.servidorSnmp.getTabla().length; i++){
-						if (!this.servidorSnmp.getTabla()[i].estaOcupado()){
-							posicion=i;
-							this.servidorSnmp.getTabla()[posicion].setNconexiones(this.servidorSnmp.getTabla()[posicion].getNconexiones()+1);
-							i=this.servidorSnmp.getTabla().length;
+						
+						if (posicion==-1){
+						// Buscamos si hay hueco libre
+						for (i=0; i<this.servidorSnmp.getTabla().length; i++){
+							if (!this.servidorSnmp.getTabla()[i].estaOcupado()){
+								posicion=i;
+								this.servidorSnmp.getTabla()[posicion].setNconexiones(this.servidorSnmp.getTabla()[posicion].getNconexiones()+1);
+								i=this.servidorSnmp.getTabla().length;
+							}
 						}
-					}
-					}
-					this.servidorSnmp.getTabla()[posicion].ocupar();
-					this.servidorSnmp.getTabla()[posicion].setIpAddr(this.skCliente.getInetAddress().getHostAddress());
-					this.localizador.insertaLocalizacion(skCliente.getInetAddress(), servidorSnmp, posicion);
-					
+						}
+						this.servidorSnmp.getTabla()[posicion].ocupar();
+						this.servidorSnmp.getTabla()[posicion].setIpAddr(this.skCliente.getInetAddress().getHostAddress());
+						this.localizador.insertaLocalizacion(skCliente.getInetAddress(), servidorSnmp, posicion);
+						
+						System.out.println("Sirvo al cliente: " + this.skCliente.getInetAddress().toString());
+						this.cliente=new Cliente(skCliente,servidorSnmp,posicion);
+						this.cliente.start();
+						this.listaClientes.add(this.cliente);
+						posicion=-1;
+				} catch( IOException e){
+					System.out.println(e.getMessage());
+				} catch (GeoIp2Exception e) {
+					System.out.println("La IP no está en la BBDD, tal vez sea una IP privada.");
 					System.out.println("Sirvo al cliente: " + this.skCliente.getInetAddress().toString());
 					this.cliente=new Cliente(skCliente,servidorSnmp,posicion);
 					this.cliente.start();
@@ -74,15 +91,6 @@ public class SirveCliente extends Thread implements SirveClienteInterfaz {
 					posicion=-1;
 				}
 			}
-		} catch( IOException e){
-			System.out.println(e.getMessage());
-		} catch (GeoIp2Exception e) {
-			System.out.println("La IP no está en la BBDD, tal vez sea una IP privada.");
-			System.out.println("Sirvo al cliente: " + this.skCliente.getInetAddress().toString());
-			this.cliente=new Cliente(skCliente,servidorSnmp,posicion);
-			this.cliente.start();
-			this.listaClientes.add(this.cliente);
-			posicion=-1;
 		}
 	}
 	

@@ -1,5 +1,7 @@
 package zinlok.server.protocolo;
 
+import java.io.IOException;
+
 // Facilita las comunicaciones con el cliente
 public interface ComunicacionInterfaz {
 	/* Este método lee un mensaje
@@ -12,5 +14,5 @@ public interface ComunicacionInterfaz {
 	 * 	-> Recibe: objeto Mensaje
 	 * 	-> Devuelve: se ha podido o no
 	 */	
-	public Boolean mandaMensaje();
+	public Boolean mandaMensaje(String mensaje) throws IOException;
 }

@@ -31,13 +31,25 @@ public class Cliente extends Thread implements ClienteInterfaz {
 			comunicaciones = new Comunicacion(this.miSocket);
 			mensaje=comunicaciones.leeMensaje();
 			
-			// Comprobamos que se ha mandado algo correcto
-			if (mensaje!=null){
+			// Primero necesitamos el usuario se autentique
+			if (mensaje.obtieneComando().equals("request") && mensaje.obtieneParametro().equals("0")){
+				// Le damos paso a que nos mande usuario y contraseña
+				comunicaciones.mandaMensaje(mensaje.formaMensaje("ok", ""));
 				
-				if (mensaje.obtieneComando().compareTo("activate")==0){
-					System.out.println("Recibido mensaje: "+mensaje.obtieneComando()+mensaje.obtieneParametro());
+				// De manera experimental ahora tenemos solo un usuario asi que
+				mensaje=comunicaciones.leeMensaje();
+				if(mensaje!=null && mensaje.obtieneComando().equals("send")){
+					if(mensaje.obtieneParametro().equals("user:user")){
+						System.out.println("El cliente \""+ this.miSocket.getInetAddress().toString()+"\" se ha"
+								+ " autenticado de manera correcta.");
+						comunicaciones.mandaMensaje(mensaje.formaMensaje("ok", ""));
+					}
 				}
 			}
+			
+			else
+				System.out.println("El cliente \""+ this.miSocket.getInetAddress().toString()+"\" no se ha"
+						+ " autenticado de manera correcta.");
 			
 			System.out.println("Se ha cerrado la conexión con el cliente: "+miSocket.getInetAddress().getHostAddress());
 			this.agente.getTabla()[this.posicion].setNconexiones(this.agente.getTabla()[this.posicion].getNconexiones()-1);

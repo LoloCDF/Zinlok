@@ -18,7 +18,7 @@ public class Localiza {
 	
 	public Localiza() throws IOException{
 		// Abrimos la fase de datos y la reflejamos en "bbdd"
-		this.bbdd=new File("/home/user/git/GeoGestor/rsc/GeoLite2-City.mmdb");		
+		this.bbdd=new File("/home/user/git/Zinlok/rsc/GeoLite2-City.mmdb");		
 		this.constructor=new DatabaseReader.Builder(this.bbdd);
 		this.buscador=this.constructor.build();
 	}

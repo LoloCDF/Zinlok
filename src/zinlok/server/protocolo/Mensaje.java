@@ -39,7 +39,7 @@ public class Mensaje implements MensajeInterfaz {
 		return this.parametro;
 	}
 	
-	public String formaMensaje(String parametro, String comando){
+	public String formaMensaje(String comando, String parametro){
 		return comando+'('+parametro+')';
 	}
 	
