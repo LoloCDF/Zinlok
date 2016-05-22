@@ -1,6 +1,7 @@
 package zinlok.server.cliente;
 
 import java.net.*;
+import java.util.ArrayList;
 
 import zinlok.server.objetos.Objeto;
 import zinlok.server.objetos.Usuario;
@@ -15,12 +16,44 @@ public class Cliente extends Thread implements ClienteInterfaz {
 	private Socket miSocket;
 	private Snmp agente = null;
 	private int posicion = 0;
+	private ArrayList<Cliente> listaClientes = null;
+	private Usuario usuario = null;
+
 	
-	public Cliente(Socket skCliente, Snmp agente, int posicion){
+	public Cliente(Socket skCliente, Snmp agente, int posicion, ArrayList<Cliente> listaClientes){
 		this.miSocket = skCliente;
 		this.agente = agente;
 		this.posicion = posicion;
+		this.listaClientes=listaClientes;
 	}
+	
+	public Usuario getUsuario(){
+		return this.usuario;
+	}
+	
+	public Boolean puedoIniciar(String nombre, int tipo){
+		Maquina concretoMaquina = null;
+		Boolean bandera = true;
+		Boolean resultado = false;
+		
+		for(int i=0; i<this.listaClientes.size() && bandera; i++){
+			if(tipo==1){
+				concretoMaquina=(Maquina) listaClientes.get(i).getUsuario().getObjeto(nombre);
+				
+				if(concretoMaquina!=null)
+					bandera=false;
+			}
+		}
+		
+		if(tipo==1){
+			if(concretoMaquina!=null){
+				resultado=concretoMaquina.getCandado();
+			}
+		}
+		
+		return resultado;
+	}
+	
 	
 	public void run(){
 		
@@ -32,10 +65,12 @@ public class Cliente extends Thread implements ClienteInterfaz {
 		
 		// Nombre del equipo
 		String nombre = "";
+		int tipo = 0;
+		InetAddress ip = null;
+		Boolean ban = true;
 		
 		// Objeto del usuario
-		Usuario usuario = null;
-		Maquina concreto=null;
+		Maquina concretoMaquina=null;
 		
 		// Leemos del stream para ver que nos pide el cliente		
 		try {
@@ -55,8 +90,104 @@ public class Cliente extends Thread implements ClienteInterfaz {
 									+ " autenticado de manera correcta.");
 							comunicaciones.mandaMensaje(mensaje.formaMensaje("ok", ""));
 							
-							usuario=new Usuario("user");
-							// Ahora esperamos a que nos pidan alguna acción
+							this.usuario=new Usuario("user");
+							// Ahora iniciamos el bucle de interacción
+							mensaje.formaMensaje("", "");
+							while(ban){
+								mensaje=comunicaciones.leeMensaje();
+								if(mensaje.obtieneComando().equals("request")){
+									
+									// Nos están pidiendo realizar una acción sobre un objeto
+									if(mensaje.obtieneParametro().equals("2")){
+										comunicaciones.mandaMensaje(mensaje.formaMensaje("ok", ""));
+										mensaje=comunicaciones.leeMensaje();
+										
+										// Estamos esperando obtener el nombre del objeto y el tipo
+										if(mensaje.obtieneComando().equals("send")){
+											nombre=mensaje.getNombre();
+											tipo=mensaje.getTipo();
+											/********************************************************
+											 * Se Trata a un Objeto de tipo máquina	                *
+											 ********************************************************/
+											if (tipo==1){
+												concretoMaquina=(Maquina) this.usuario.getObjeto(nombre);
+												if(concretoMaquina != null){
+													comunicaciones.mandaMensaje(mensaje.formaMensaje("ok", ""));
+															
+													// Una vez obtenido el objeto vemos que quiere hacer el usuario
+													mensaje=comunicaciones.leeMensaje();
+															
+													if(mensaje.obtieneComando().equals("send")){
+														
+														// Quiere cerrarlo
+														if(mensaje.obtieneParametro().equals("1"))
+															concretoMaquina.cerrarCandado();
+														
+														// Quiere abrirlo
+														else if(mensaje.obtieneParametro().equals("0"))
+															concretoMaquina.abreCandado();
+														// Quiere saber como está
+														else if(mensaje.obtieneParametro().equals("2")){
+															if(!concretoMaquina.getCandado())
+																comunicaciones.mandaMensaje(mensaje.formaMensaje("ok", ""));
+															else
+																comunicaciones.mandaMensaje(mensaje.formaMensaje("failure", ""));			
+														}
+														comunicaciones.mandaMensaje(mensaje.formaMensaje("ok", ""));
+													}
+											}
+										}
+											
+										else
+											comunicaciones.mandaMensaje(mensaje.formaMensaje("failure", ""));
+
+										}
+									}
+									
+									// Nos están pidiendo comprobar el estado del objeto
+									else if(mensaje.obtieneParametro().equals("5")){
+										comunicaciones.mandaMensaje(mensaje.formaMensaje("ok", ""));
+										// Esperamos el nombre
+										mensaje=comunicaciones.leeMensaje();
+										
+										if(mensaje.obtieneComando().equals("send")){
+											nombre=mensaje.obtieneParametro();
+											this.usuario.getObjeto(nombre).compruebaEstado();
+											
+											if(this.usuario.getObjeto(nombre).getEstado())
+												comunicaciones.mandaMensaje(mensaje.formaMensaje("ok", ""));
+											
+											else
+												comunicaciones.mandaMensaje(mensaje.formaMensaje("failure", ""));
+										}
+									}
+									
+									else if(mensaje.obtieneParametro().equals("1"))
+										ban=false;
+									
+									// Nos están pidiendo añadir nuevo objeto al usuario
+									else if(mensaje.obtieneParametro().equals("4")){
+										// Recibimos: nombre, IP y tipo
+										comunicaciones.mandaMensaje(mensaje.formaMensaje("ok", ""));
+										mensaje=comunicaciones.leeMensaje();
+										if(mensaje.obtieneComando().equals("send")){
+
+											nombre=mensaje.getNombre();
+											tipo=mensaje.getTipo();
+											ip=mensaje.getIP();
+											if(tipo==1){
+												concretoMaquina=new Maquina(nombre,ip);
+
+												this.usuario.addObjeto((Objeto) concretoMaquina);
+												comunicaciones.mandaMensaje(mensaje.formaMensaje("ok", ""));			
+											}
+										}
+										
+									}
+							}
+								
+							mensaje.formaMensaje("", "");
+						}
 						}
 						
 						else
@@ -70,17 +201,14 @@ public class Cliente extends Thread implements ClienteInterfaz {
 					comunicaciones.mandaMensaje(mensaje.formaMensaje("ok", ""));
 					mensaje=comunicaciones.leeMensaje();
 					
-					if (mensaje.obtieneComando().equals("send") && usuario != null){
-						concreto=(Maquina) usuario.getObjeto(mensaje.obtieneParametro());
-						if(concreto!=null){
-							if(concreto.getCandado())
-								comunicaciones.mandaMensaje(mensaje.formaMensaje("failure", ""));
-							else
-								comunicaciones.mandaMensaje(mensaje.formaMensaje("ok", ""));
-						}
-						
+					if (mensaje.obtieneComando().equals("send")){
+						nombre=mensaje.getNombre();
+						tipo=mensaje.getTipo();
+						if(this.puedoIniciar(nombre, tipo))
+							comunicaciones.mandaMensaje(mensaje.formaMensaje("ok", ""));
 						else
 							comunicaciones.mandaMensaje(mensaje.formaMensaje("failure",""));
+
 					}
 					else
 						comunicaciones.mandaMensaje(mensaje.formaMensaje("failure",""));

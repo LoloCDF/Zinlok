@@ -76,7 +76,7 @@ public class SirveCliente extends Thread implements SirveClienteInterfaz {
 						this.localizador.insertaLocalizacion(skCliente.getInetAddress(), servidorSnmp, posicion);
 						
 						System.out.println("Sirvo al cliente: " + this.skCliente.getInetAddress().toString());
-						this.cliente=new Cliente(skCliente,servidorSnmp,posicion);
+						this.cliente=new Cliente(skCliente,servidorSnmp,posicion,this.listaClientes);
 						this.cliente.start();
 						this.listaClientes.add(this.cliente);
 						posicion=-1;
@@ -85,7 +85,7 @@ public class SirveCliente extends Thread implements SirveClienteInterfaz {
 				} catch (GeoIp2Exception e) {
 					System.out.println("La IP no está en la BBDD, tal vez sea una IP privada.");
 					System.out.println("Sirvo al cliente: " + this.skCliente.getInetAddress().toString());
-					this.cliente=new Cliente(skCliente,servidorSnmp,posicion);
+					this.cliente=new Cliente(skCliente,servidorSnmp,posicion,this.listaClientes);
 					this.cliente.start();
 					this.listaClientes.add(this.cliente);
 					posicion=-1;

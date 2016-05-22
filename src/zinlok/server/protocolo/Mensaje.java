@@ -1,9 +1,12 @@
 package zinlok.server.protocolo;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 public class Mensaje implements MensajeInterfaz {
 	private String comando="";
 	private String parametro="";
-
+	
 	public Mensaje (String mensaje){
 		int posComando = 0;
 		int posParametro = 0;
@@ -38,6 +41,24 @@ public class Mensaje implements MensajeInterfaz {
 	public String obtieneParametro(){
 		return this.parametro;
 	}
+	
+	public String getNombre(){
+		String []cadena = this.parametro.split(":");
+	
+		return cadena[0];
+	}
+	
+	public InetAddress getIP() throws UnknownHostException {
+		String []cadena = this.parametro.split(":");
+		
+		return InetAddress.getByName(cadena[2]);
+	}
+	
+	public int getTipo(){
+		String []cadena = this.parametro.split(":");
+		return Integer.parseInt(cadena[1]);
+	}
+
 	
 	public String formaMensaje(String comando, String parametro){
 		return comando+'('+parametro+')';
