@@ -32,6 +32,8 @@ public class SirveCliente extends Thread implements SirveClienteInterfaz {
 	public void run(){
 		int i = 0;
 		int posicion = -1;
+			
+		
 		
 			try {
 				this.localizador=new Localiza();

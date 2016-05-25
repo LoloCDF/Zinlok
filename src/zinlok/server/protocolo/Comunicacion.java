@@ -19,15 +19,12 @@ public class Comunicacion implements ComunicacionInterfaz{
 		byte[] buffer = new byte[1024];
 		int tamanoLeido = 0;
 		String cadena = "";
-
 		try {
 			entrada=this.skCliente.getInputStream();
-			
 			// Leemos byte a byte
 			while((tamanoLeido=entrada.read(buffer))==1);
-			
 			cadena=new String(buffer,0,tamanoLeido);
-			
+
 			// Despedazamos el mensaje
 			mensaje=new Mensaje(cadena);
 			

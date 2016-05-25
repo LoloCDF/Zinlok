@@ -68,6 +68,7 @@ public class Cliente extends Thread implements ClienteInterfaz {
 		int tipo = 0;
 		InetAddress ip = null;
 		Boolean ban = true;
+		Boolean error = false;
 		
 		// Objeto del usuario
 		Maquina concretoMaquina=null;
@@ -76,7 +77,7 @@ public class Cliente extends Thread implements ClienteInterfaz {
 		try {
 			comunicaciones = new Comunicacion(this.miSocket);
 			mensaje=comunicaciones.leeMensaje();
-			if (mensaje.obtieneComando().equals("request")){
+			if (mensaje!=null && mensaje.obtieneComando().equals("request")){
 				if (mensaje.obtieneParametro().equals("0")){
 					// Primero necesitamos el usuario se autentique
 					// Le damos paso a que nos mande usuario y contraseña
@@ -93,9 +94,9 @@ public class Cliente extends Thread implements ClienteInterfaz {
 							this.usuario=new Usuario("user");
 							// Ahora iniciamos el bucle de interacción
 							mensaje.formaMensaje("", "");
-							while(ban){
+							while(ban&&error==false){
 								mensaje=comunicaciones.leeMensaje();
-								if(mensaje.obtieneComando().equals("request")){
+								if(mensaje!=null && mensaje.obtieneComando().equals("request")){
 									
 									// Nos están pidiendo realizar una acción sobre un objeto
 									if(mensaje.obtieneParametro().equals("2")){
@@ -103,7 +104,7 @@ public class Cliente extends Thread implements ClienteInterfaz {
 										mensaje=comunicaciones.leeMensaje();
 										
 										// Estamos esperando obtener el nombre del objeto y el tipo
-										if(mensaje.obtieneComando().equals("send")){
+										if(mensaje!=null&&mensaje.obtieneComando().equals("send")){
 											nombre=mensaje.getNombre();
 											tipo=mensaje.getTipo();
 											/********************************************************
@@ -117,15 +118,20 @@ public class Cliente extends Thread implements ClienteInterfaz {
 													// Una vez obtenido el objeto vemos que quiere hacer el usuario
 													mensaje=comunicaciones.leeMensaje();
 															
-													if(mensaje.obtieneComando().equals("send")){
+													if(mensaje!=null&&mensaje.obtieneComando().equals("send")){
 														
 														// Quiere cerrarlo
-														if(mensaje.obtieneParametro().equals("1"))
+														if(mensaje.obtieneParametro().equals("1")){
 															concretoMaquina.cerrarCandado();
+															comunicaciones.mandaMensaje(mensaje.formaMensaje("ok", ""));
+														}
 														
 														// Quiere abrirlo
-														else if(mensaje.obtieneParametro().equals("0"))
+														else if(mensaje.obtieneParametro().equals("0")){
 															concretoMaquina.abreCandado();
+															comunicaciones.mandaMensaje(mensaje.formaMensaje("ok", ""));
+														}
+														
 														// Quiere saber como está
 														else if(mensaje.obtieneParametro().equals("2")){
 															if(!concretoMaquina.getCandado())
@@ -133,7 +139,6 @@ public class Cliente extends Thread implements ClienteInterfaz {
 															else
 																comunicaciones.mandaMensaje(mensaje.formaMensaje("failure", ""));			
 														}
-														comunicaciones.mandaMensaje(mensaje.formaMensaje("ok", ""));
 													}
 											}
 										}
@@ -145,12 +150,12 @@ public class Cliente extends Thread implements ClienteInterfaz {
 									}
 									
 									// Nos están pidiendo comprobar el estado del objeto
-									else if(mensaje.obtieneParametro().equals("5")){
+									else if(mensaje!=null&&mensaje.obtieneParametro().equals("5")){
 										comunicaciones.mandaMensaje(mensaje.formaMensaje("ok", ""));
 										// Esperamos el nombre
 										mensaje=comunicaciones.leeMensaje();
 										
-										if(mensaje.obtieneComando().equals("send")){
+										if(mensaje!=null&&mensaje.obtieneComando().equals("send")){
 											nombre=mensaje.obtieneParametro();
 											this.usuario.getObjeto(nombre).compruebaEstado();
 											
@@ -162,15 +167,15 @@ public class Cliente extends Thread implements ClienteInterfaz {
 										}
 									}
 									
-									else if(mensaje.obtieneParametro().equals("1"))
+									else if(mensaje!=null&&mensaje.obtieneParametro().equals("1"))
 										ban=false;
 									
 									// Nos están pidiendo añadir nuevo objeto al usuario
-									else if(mensaje.obtieneParametro().equals("4")){
+									else if(mensaje!=null&&mensaje.obtieneParametro().equals("4")){
 										// Recibimos: nombre, IP y tipo
 										comunicaciones.mandaMensaje(mensaje.formaMensaje("ok", ""));
 										mensaje=comunicaciones.leeMensaje();
-										if(mensaje.obtieneComando().equals("send")){
+										if(mensaje!=null&&mensaje.obtieneComando().equals("send")){
 
 											nombre=mensaje.getNombre();
 											tipo=mensaje.getTipo();
@@ -185,8 +190,14 @@ public class Cliente extends Thread implements ClienteInterfaz {
 										
 									}
 							}
+							if(mensaje!=null)
+								mensaje.formaMensaje("", "");
+							else {
+								error=true;
+								mensaje= new Mensaje("request(0)");
+								mensaje.formaMensaje("", "");
+							}
 								
-							mensaje.formaMensaje("", "");
 						}
 						}
 						
@@ -198,13 +209,12 @@ public class Cliente extends Thread implements ClienteInterfaz {
 				
 				else if(mensaje.obtieneParametro().equals("3")){
 					// Contestamos y obtenemos el nombre
-					comunicaciones.mandaMensaje(mensaje.formaMensaje("ok", ""));
 					mensaje=comunicaciones.leeMensaje();
 					
-					if (mensaje.obtieneComando().equals("send")){
+					if (mensaje!=null&&mensaje.obtieneComando().equals("send")){
 						nombre=mensaje.getNombre();
 						tipo=mensaje.getTipo();
-						if(this.puedoIniciar(nombre, tipo))
+						if(!(this.puedoIniciar(nombre, tipo)))
 							comunicaciones.mandaMensaje(mensaje.formaMensaje("ok", ""));
 						else
 							comunicaciones.mandaMensaje(mensaje.formaMensaje("failure",""));
@@ -216,7 +226,7 @@ public class Cliente extends Thread implements ClienteInterfaz {
 			}
 			System.out.println("Se ha cerrado la conexión con el cliente: "+miSocket.getInetAddress().getHostAddress());
 			this.agente.getTabla()[this.posicion].setNconexiones(this.agente.getTabla()[this.posicion].getNconexiones()-1);
-			
+			this.agente.decrementaClientes();
 			if (this.agente.getTabla()[this.posicion].getNconexiones()==0)
 				this.agente.getTabla()[this.posicion].liberar();
 			

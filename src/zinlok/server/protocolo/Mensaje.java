@@ -10,7 +10,7 @@ public class Mensaje implements MensajeInterfaz {
 	public Mensaje (String mensaje){
 		int posComando = 0;
 		int posParametro = 0;
-		
+		Boolean bandera = false;
 		if (mensaje != null){
 			// Obtenemos el comando
 			for (posComando=0; posComando<mensaje.length(); posComando++){
